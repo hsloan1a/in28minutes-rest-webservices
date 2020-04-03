@@ -5,6 +5,10 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
 
+import com.fasterxml.jackson.databind.ser.BeanPropertyFilter;
+import com.fasterxml.jackson.databind.ser.FilterProvider;
+import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
+import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.in28minutes.rest.webservices.restfulwebservices.exception.UserNotFoundException;
 import com.in28minutes.rest.webservices.restfulwebservices.model.User;
 import com.in28minutes.rest.webservices.restfulwebservices.model.UserDaoService;
@@ -13,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.mvc.ControllerLinkBuilder;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.json.MappingJacksonValue;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -34,8 +39,14 @@ public class UserController {
 
     @GetMapping("/users")
 
-     List<User> getAllUsers() {
-        return userDaoService.getAll();
+    MappingJacksonValue getAllUsers() {
+        List<User> users = userDaoService.getAll();
+        SimpleBeanPropertyFilter simpleBeanPropertyFilter = SimpleBeanPropertyFilter.filterOutAllExcept("id", "name");
+        FilterProvider filterProvider = new SimpleFilterProvider()
+                .addFilter("AllUserFilter", simpleBeanPropertyFilter);
+        MappingJacksonValue mappingJacksonValue = new MappingJacksonValue(users);
+        mappingJacksonValue.setFilters(filterProvider);
+        return mappingJacksonValue;
     }
 
     @GetMapping("/users/{id}")
